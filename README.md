@@ -30,31 +30,48 @@ A production-ready autonomous research agent built with **LangChain**, **FastAPI
 
 ---
 
-## Architecture
+# Architecture
+
+The system follows a **modular architecture** where the **LLM agent orchestrates multiple tools** and stores conversation history in Redis.
 
 ```
-User → POST /agent/invoke
-          │
-          ▼
-     invoke_agent()
-          │
-     ┌────┴─────────────────────────────────────────┐
-     │  OpenAI available?             No → _fallback │
-     │  Yes                                          │
-     │  create_agent(model, tools)                   │
-     │      │                                        │
-     │  ReAct loop (LangGraph)                       │
-     │      ├── calculator                           │
-     │      ├── web_search                           │
-     │      ├── sql_query_tool                       │
-     │      └── python_code_interpreter              │
-     └──────────────────────────────────────────────┘
-          │
-     Redis → save_message (user + assistant)
-          │
-     FastAPI → AgentResponse(response, reasoning_trace)
+User
+ |
+ v
+FastAPI API
+ |
+ v
+LangChain ReAct Agent
+ |
+ +---- Calculator Tool
+ |
+ +---- Web Search Tool (SerpAPI)
+ |
+ +---- SQL Query Tool (SQLite)
+ |
+ +---- Python Code Interpreter
+ |
+ v
+Redis (Conversation Memory)
+ |
+ v
+SQLite Database
 ```
 
+---
+
+## Components
+
+| Component | Description |
+|----------|-------------|
+| FastAPI | REST API to interact with the agent |
+| LangChain | Handles agent reasoning and tool execution |
+| Redis | Stores conversation history using session IDs |
+| SQLite | Local database storing users table |
+| Docker | Containerized deployment |
+| SerpAPI | Web search integration |
+
+---
 ---
 
 ## Project Structure
@@ -115,7 +132,7 @@ research-agent/
 
 ```bash
 # 1. Clone the repo
-git clone <repo-url>
+git clone "https://github.com/rakeshchinni77/research-agent"
 cd research-agent
 
 # 2. Create and activate a virtual environment
@@ -207,8 +224,8 @@ Invoke the research agent with a natural-language query.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `query` | string | ✅ | The question or task for the agent |
-| `session_id` | string | ✅ | Unique identifier for the conversation (enables multi-turn memory) |
+| `query` | string | Yes | The question or task for the agent |
+| `session_id` | string | Yes | Unique identifier for the conversation (enables multi-turn memory) |
 
 **Response:**
 ```json
@@ -286,12 +303,42 @@ Copy `.env.example` to `.env` and fill in the values:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `OPENAI_API_KEY` | ✅ | — | OpenAI API key (gpt-4o-mini used by default) |
-| `SEARCH_API_KEY` | ⚠️ optional | — | SerpAPI key for web search tool |
-| `DATABASE_URL` | ❌ | `sqlite:///./research_agent.db` | SQLite database URL |
-| `REDIS_HOST` | ❌ | `redis` (Docker) / `localhost` (local) | Redis hostname |
-| `REDIS_PORT` | ❌ | `6379` | Redis port |
-| `REDIS_DB` | ❌ | `0` | Redis database index |
-| `API_PORT` | ❌ | `8000` | Port for the FastAPI server |
+| `OPENAI_API_KEY` | Yes | — | OpenAI API key (gpt-4o-mini used by default) |
+| `SEARCH_API_KEY` | Yes | — | SerpAPI key for web search tool |
+| `DATABASE_URL` | No  | `sqlite:///./research_agent.db` | SQLite database URL |
+| `REDIS_HOST` | No | `redis` (Docker) / `localhost` (local) | Redis hostname |
+| `REDIS_PORT` | No | `6379` | Redis port |
+| `REDIS_DB` | No | `0` | Redis database index |
+| `API_PORT` | No | `8000` | Port for the FastAPI server |
 
-> If `OPENAI_API_KEY` is missing or the API is rate-limited, the agent automatically falls back to a deterministic tool dispatcher that handles all standard query types (math, SQL, Python, web search, multi-step) without any LLM call.
+---
+#  Testing
+
+Run tests using:
+
+```bash
+pytest
+```
+
+---
+
+##  Expected Result
+
+```
+9 passed
+```
+
+---
+
+## Test Coverage
+
+The test suite covers the following components:
+
+- **Calculator Tool**
+- **Web Search Tool**
+- **SQL Tool**
+- **Python Interpreter**
+- **Agent Reasoning**
+- **Multi-step Tool Usage**
+
+---
