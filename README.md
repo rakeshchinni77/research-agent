@@ -30,6 +30,11 @@ A production-ready autonomous research agent built with **LangChain**, **FastAPI
 
 ---
 
+
+> 🚀 Live Demo: See the agent in action → [Watch Video](https://drive.google.com/file/d/1uhzKfTdwDoWu-cEFWNQovOq5v9HPpEyP/view)
+
+---
+
 # Architecture
 
 The system follows a **modular architecture** where the **LLM agent orchestrates multiple tools** and stores conversation history in Redis.
